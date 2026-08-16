@@ -25,10 +25,10 @@ dsh plugin --profile web add "github:XEsx630/dsh-screenshot#v0.1.0"
 
 ### 本地开发安装
 
-源码位于 `D:\dsh-plugins\dsh-screenshot\`,以 `link:` 方式挂载到 web profile:
+把插件源码放到任意目录(如 `D:\path\to\dsh-screenshot`),以 `link:` 方式挂载到 web profile:
 
 1. `~/.dsh/profiles/web/package.json`:
-   - `dependencies` 增加 `"dsh-screenshot": "link:D:/dsh-plugins/dsh-screenshot"`
+   - `dependencies` 增加 `"dsh-screenshot": "link:D:/path/to/dsh-screenshot"`
    - `dsh.profile.bundles` 增加 `"dsh-screenshot"`
 2. 在 `~/.dsh/profiles/web/` 运行 `pnpm install`
 3. 重启 `dsh web` 并刷新浏览器
