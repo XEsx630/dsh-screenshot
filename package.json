@@ -1,0 +1,76 @@
+{
+  "name": "dsh-screenshot",
+  "version": "0.2.0",
+  "description": "WeChat-style screenshot for the DeepSeek Harness composer: capture or hide the DSH window, drag a region, and attach the crop as a native draft attachment.",
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "screenshot",
+    "snip"
+  ],
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "docs/preview.png",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "license": "MIT",
+  "author": "XEsx630",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/XEsx630/dsh-screenshot.git"
+  },
+  "homepage": "https://github.com/XEsx630/dsh-screenshot#readme",
+  "bugs": {
+    "url": "https://github.com/XEsx630/dsh-screenshot/issues"
+  },
+  "engines": {
+    "node": ">=22",
+    "dsh": ">=0.2.0-0"
+  },
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check lib/index.js && node --check lib/client.js && node --check lib/geometry.js && node --check lib/png.js"
+  },
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": false,
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-file-upload"
+      ]
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": ">=4.0.1",
+    "@deepseek-ai/dsh-host-webserver": ">=0.2.0-0",
+    "react": ">=18.2.0"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-host-webserver": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
+  }
+}

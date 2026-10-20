@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>dsh-screenshot preview</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { width: 1600px; height: 1000px; margin: 0; overflow: hidden; }
+  body {
+    background: #0b0b0d;
+    font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+    color: #e6e7eb;
+  }
+
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(0, 0, 0, .66);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .stage {
+    position: relative;
+    width: 1400px; height: 788px;
+    background: #000;
+    overflow: hidden;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, .55);
+  }
+
+  /* ── the "captured screen": a maximized dark editor ─────────────────── */
+  .editor { position: absolute; inset: 0; background: #16171b; }
+  .titlebar {
+    height: 38px; display: flex; align-items: center; gap: 8px;
+    padding: 0 14px; background: #1d1e23; border-bottom: 1px solid #2a2b31;
+  }
+  .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .dot.r { background: #ff5f57; } .dot.y { background: #febc2e; } .dot.g { background: #28c840; }
+  .tab {
+    margin-left: 16px; padding: 5px 14px; border-radius: 6px 6px 0 0;
+    background: #16171b; color: #c8c9cf; font-size: 12px;
+    border: 1px solid #2a2b31; border-bottom: none;
+  }
+  .tab b { color: #7aa2f7; font-weight: 500; }
+  .code {
+    padding: 16px 18px;
+    font: 14px/22px "Cascadia Code", Consolas, "Courier New", monospace;
+    color: #c9ccd4;
+  }
+  .row { display: block; white-space: pre; height: 22px; }
+  .ln { display: inline-block; width: 30px; text-align: right; margin-right: 18px; color: #474a54; }
+  .k { color: #bb9af7; } .s { color: #9ece6a; } .c { color: #5f6672; }
+  .f { color: #7aa2f7; } .n { color: #ff9e64; }
+  .status {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 26px;
+    background: #1d1e23; border-top: 1px solid #2a2b31;
+    display: flex; align-items: center; gap: 18px; padding: 0 14px;
+    color: #6d7280; font-size: 11px;
+  }
+
+  /* ── plugin overlay chrome ───────────────────────────────────────────── */
+  .selection {
+    position: absolute;
+    border: 1px solid #fff;
+    background: rgba(255, 255, 255, .06);
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, .42);
+  }
+  .size {
+    position: absolute;
+    padding: 1px 6px; border-radius: 4px;
+    background: rgba(0, 0, 0, .75); color: #fff;
+    font: 12px/18px "Segoe UI", sans-serif; white-space: nowrap;
+  }
+  .toolbar {
+    position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; border: 1px solid #33343a; border-radius: 12px;
+    background: #1c1d21; box-shadow: 0 10px 30px rgba(0, 0, 0, .45);
+  }
+  .hint { color: #8b8d96; font-size: 11px; white-space: nowrap; margin-right: 4px; }
+  .btn {
+    min-width: 64px; padding: 6px 12px; border-radius: 8px;
+    border: 1px solid #33343a; background: transparent; color: #e6e7eb;
+    font: inherit; font-size: 12px;
+  }
+  .btn.primary { background: #4d6bfe; border-color: transparent; color: #fff; }
+</style>
+</head>
+<body>
+  <div class="overlay">
+    <div class="stage">
+      <div class="editor">
+        <div class="titlebar">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="tab"><b>client.js</b> — dsh-screenshot</span>
+        </div>
+        <div class="code">
+          <div class="row"><span class="ln">1</span><span class="c">// dsh-screenshot — attach a cropped shot as a draft attachment</span></div>
+          <div class="row"><span class="ln">2</span><span class="k">async function</span> <span class="f">attachShot</span>({ sessionId, file, mode }) {</div>
+          <div class="row"><span class="ln">3</span>  <span class="k">const</span> response = <span class="k">await</span> <span class="f">fetch</span>(<span class="s">`${API}/file?id=${file.id}`</span>)</div>
+          <div class="row"><span class="ln">4</span>  <span class="k">const</span> blob = <span class="k">await</span> response.<span class="f">blob</span>()</div>
+          <div class="row"><span class="ln">5</span>  <span class="k">const</span> upload = <span class="k">new</span> <span class="f">File</span>([blob], file.name, { type: <span class="s">'image/png'</span> })</div>
+          <div class="row"><span class="ln">6</span> </div>
+          <div class="row"><span class="ln">7</span>  <span class="c">// DSH owns the draft registry: images ride the prompt as bytes,</span></div>
+          <div class="row"><span class="ln">8</span>  <span class="c">// generic files upload and reach the model as a saved path.</span></div>
+          <div class="row"><span class="ln">9</span>  <span class="k">const</span> drafts = conversation.<span class="f">createDrafts</span>(sessionId, [upload])</div>
+          <div class="row"><span class="ln">10</span>  <span class="k">try</span> {</div>
+          <div class="row"><span class="ln">11</span>    <span class="k">if</span> (!actions.<span class="f">addAttachments</span>(drafts.<span class="f">map</span>((d) =&gt; d.id))) {</div>
+          <div class="row"><span class="ln">12</span>      <span class="k">throw</span> <span class="k">new</span> <span class="f">Error</span>(<span class="s">'输入框正忙，请稍后重试'</span>)</div>
+          <div class="row"><span class="ln">13</span>    }</div>
+          <div class="row"><span class="ln">14</span>  } <span class="k">catch</span> (failure) {</div>
+          <div class="row"><span class="ln">15</span>    <span class="k">for</span> (<span class="k">const</span> draft <span class="k">of</span> drafts) {</div>
+          <div class="row"><span class="ln">16</span>      conversation.<span class="f">releaseDraftAttachment</span>?.(draft.id)</div>
+          <div class="row"><span class="ln">17</span>    }</div>
+          <div class="row"><span class="ln">18</span>    <span class="k">throw</span> failure</div>
+          <div class="row"><span class="ln">19</span>  }</div>
+          <div class="row"><span class="ln">20</span>}</div>
+          <div class="row"><span class="ln">21</span> </div>
+          <div class="row"><span class="ln">22</span><span class="c">// the host crops in physical pixels; the browser only sends a rect</span></div>
+          <div class="row"><span class="ln">23</span><span class="k">const</span> { width, height } = <span class="k">await</span> <span class="f">readPngSize</span>(source)</div>
+          <div class="row"><span class="ln">24</span><span class="k">const</span> ratioX = width / stage.w</div>
+          <div class="row"><span class="ln">25</span><span class="k">const</span> ratioY = height / stage.h</div>
+          <div class="row"><span class="ln">26</span> </div>
+          <div class="row"><span class="ln">27</span><span class="k">return</span> { x: <span class="f">clamp</span>(<span class="n">0</span>, width, <span class="f">Math</span>.<span class="f">round</span>(rect.x * ratioX)), ... }</div>
+          <div class="row"><span class="ln">28</span> </div>
+          <div class="row"><span class="ln">29</span><span class="c">// the selection stays in display space until the host rescales it</span></div>
+          <div class="row"><span class="ln">30</span><span class="k">const</span> stage = { w: box.width, h: box.height }</div>
+          <div class="row"><span class="ln">31</span><span class="k">return</span> <span class="f">toPhysicalRect</span>(rect, stage, image)</div>
+        </div>
+        <div class="status"><span>TypeScript</span><span>UTF-8</span><span>LF</span><span>dsh-screenshot · 0.2.0</span></div>
+      </div>
+
+      <div class="selection" style="left:58px; top:252px; width:1010px; height:198px"></div>
+      <div class="size" style="left:58px; top:226px">1846 × 362</div>
+    </div>
+
+    <div class="toolbar">
+      <span class="hint">拖拽框选 · Enter 确定 · Esc 取消</span>
+      <button class="btn">全选</button>
+      <button class="btn">取消</button>
+      <button class="btn primary">确定</button>
+    </div>
+  </div>
+</body>
+</html>
